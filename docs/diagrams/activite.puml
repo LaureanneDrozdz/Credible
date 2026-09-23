@@ -1,0 +1,74 @@
+@startuml activite
+!theme plain
+skinparam backgroundColor white
+title Crédible · Préparer une candidature
+
+|Candidat·e|
+start
+repeat
+  :Coller le CV;
+  |LLM|
+  :Extraire expériences, preuves
+  et compétences affichées;
+  |Crédible|
+  :Valider la sortie (Zod)
+  1 nouvelle tentative max;
+repeat while (Sortie valide ?) is (non : erreur explicite,\ntexte conservé)
+-> oui;
+|Candidat·e|
+:Relire, corriger
+et valider les preuves;
+
+repeat
+  :Coller l'offre;
+  |LLM|
+  :Extraire les exigences;
+  |Crédible|
+  :Valider la sortie (Zod);
+repeat while (Sortie valide ?) is (non : erreur explicite)
+-> oui;
+|Candidat·e|
+:Corriger les exigences
+importance, compétence;
+
+if (Joindre une lettre ?) then (oui)
+  :Coller la lettre;
+else (non)
+endif
+
+repeat
+  |LLM|
+  :Extraire les documents nouveaux :
+  compétences affichées,
+  et expériences pour un CV;
+  |Crédible|
+  :Valider la sortie (Zod);
+  :Comparer les expériences
+  extraites au profil;
+  if (Expériences nouvelles ?) then (oui)
+    |Candidat·e|
+    :Relire et valider
+    les expériences nouvelles;
+    |Crédible|
+  else (non)
+  endif
+  :Règles déterministes
+  sur la dernière version des documents :
+  classement, score,
+  alertes, cohérence;
+  |LLM|
+  :Rédiger les formulations
+  honnêtes des écarts
+  en citant les preuves;
+  |Crédible|
+  :Écarter les suggestions
+  qui citent une preuve
+  inexistante ou non validée;
+  :Enregistrer l'analyse
+  modèle et version du prompt;
+  |Candidat·e|
+  :Lire le rapport;
+repeat while (Modifier le CV ou la lettre ?) is (oui : coller la nouvelle version)
+-> non;
+stop
+@enduml

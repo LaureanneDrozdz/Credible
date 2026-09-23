@@ -1,0 +1,142 @@
+@startuml erd
+!theme plain
+skinparam backgroundColor white
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 70
+hide circle
+hide empty members
+title Crédible · Modèle de données (MVP)
+
+' Les directions (-down-, -up-, -left-, -right-) fixent la disposition :
+' Skill en bas au centre, relié à ce qui est affiché, prouvé et exigé.
+
+' ─── Profil et preuves ───
+entity Profile #DCEBFA {
+  * id : uuid <<PK>>
+  --
+  * fullName : string
+  headline : string
+}
+
+entity Experience #DCEBFA {
+  * id : uuid <<PK>>
+  --
+  * profileId : uuid <<FK>>
+  sourceDocumentId : uuid <<FK>> <i>(null = saisie à la main)</i>
+  * kind : PROFESSIONAL | TRAINING | PERSONAL
+  * title : string
+  * organization : string
+  * startDate : date
+  endDate : date <i>(null = en cours)</i>
+  description : text
+  * validated : bool
+}
+
+entity SkillEvidence #DCEBFA {
+  * id : uuid <<PK>>
+  --
+  * experienceId : uuid <<FK>>
+  * skillId : uuid <<FK>>
+  context : string <i>(ce qui a été fait)</i>
+  * validated : bool
+}
+
+' ─── Référentiel ───
+entity Skill #FFF3C4 {
+  * id : uuid <<PK>>
+  --
+  * name : string <<UK>>
+  * category : SkillCategory
+  * aliases : string[]
+}
+
+' ─── Documents ───
+entity Document #DFF2E1 {
+  * id : uuid <<PK>>
+  --
+  * profileId : uuid <<FK>>
+  * type : CV | COVER_LETTER
+  * title : string
+  * content : text <i>(immuable)</i>
+}
+
+entity ClaimedSkill #DFF2E1 {
+  * id : uuid <<PK>>
+  --
+  * documentId : uuid <<FK>>
+  * skillId : uuid <<FK>>
+  level : ClaimedLevel
+  years : int <i>(années affichées)</i>
+  * rawText : string <i>(formulation d'origine)</i>
+}
+
+' ─── Offres et analyses ───
+entity JobOffer #FCE3D2 {
+  * id : uuid <<PK>>
+  --
+  * title : string
+  * company : string
+  url : string
+  * rawText : text
+}
+
+entity OfferRequirement #FCE3D2 {
+  * id : uuid <<PK>>
+  --
+  * offerId : uuid <<FK>>
+  skillId : uuid <<FK>> <i>(null = sans correspondance)</i>
+  * importance : MUST | NICE
+  minYears : int
+  * rawText : string
+}
+
+entity Analysis #FCE3D2 {
+  * id : uuid <<PK>>
+  --
+  * offerId : uuid <<FK>>
+  * cvId : uuid <<FK>> <i>(version exacte)</i>
+  letterId : uuid <<FK>> <i>(version exacte)</i>
+  * score : int <i>(0-100)</i>
+  * result : json <i>(validé par Zod)</i>
+  * model : string
+  * promptVersion : string
+}
+
+' Grille 3 × 3 :
+'   Profile        Document       Analysis
+'   Experience     ClaimedSkill   JobOffer
+'   SkillEvidence  Skill          OfferRequirement
+
+' ─── Ligne 1 ───
+Profile ||-right-o{ Document : rédige
+Document ||-right-o{ Analysis : CV
+Document |o-right-o{ Analysis : lettre
+
+' ─── Colonnes ───
+Profile ||-down-o{ Experience : a vécu
+Experience ||-down-o{ SkillEvidence : prouve
+Document ||-down-o{ ClaimedSkill : affiche
+Skill ||-up-o{ ClaimedSkill
+JobOffer ||-up-o{ Analysis : analysée
+JobOffer ||-down-o{ OfferRequirement : exige
+
+' ─── Ligne 3 : Skill au centre ───
+Skill ||-left-o{ SkillEvidence
+Skill |o-right-o{ OfferRequirement
+
+' ─── Diagonale ───
+Document |o--o{ Experience : extraite de
+
+' ─── Ordre des colonnes (liens invisibles) ───
+Experience -[hidden]right- ClaimedSkill
+ClaimedSkill -[hidden]right- JobOffer
+
+legend right
+  |<#DCEBFA>     | Profil et preuves |
+  |<#DFF2E1>     | Documents |
+  |<#FCE3D2>     | Offres et analyses |
+  |<#FFF3C4>     | Référentiel |
+  ● = champ obligatoire
+endlegend
+@enduml

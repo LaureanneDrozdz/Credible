@@ -1,0 +1,49 @@
+@startuml architecture
+!theme plain
+skinparam backgroundColor white
+skinparam componentStyle rectangle
+title Crédible · Architecture
+
+actor "Candidat·e" as user
+cloud "API Claude\n(Anthropic)" as claude
+
+node "Docker Compose" {
+  component "frontend · Next.js\n<size:10>profil · offres · rapport</size>" as front
+
+  package "backend · NestJS" {
+    component "Contrôleurs REST\n<size:10>+ validation Zod</size>" as ctrl
+
+    package "Domaine" {
+      component profile
+      component offers
+      component "analysis\n<size:10>règles déterministes</size>" as analysis
+    }
+
+    interface LlmPort
+    component AnthropicAdapter
+    component "FakeAdapter\n<size:10>tests · démo</size>" as fake
+    component PrismaService
+  }
+
+  database PostgreSQL as db
+}
+
+user --> front : HTTP
+front --> ctrl : REST JSON
+ctrl --> profile
+ctrl --> offers
+ctrl --> analysis
+
+profile ..> LlmPort : extraction
+offers ..> LlmPort : extraction
+analysis ..> LlmPort : rédaction
+
+AnthropicAdapter -up-|> LlmPort
+fake -up-|> LlmPort
+AnthropicAdapter --> claude : HTTPS
+
+profile --> PrismaService
+offers --> PrismaService
+analysis --> PrismaService
+PrismaService --> db
+@enduml
