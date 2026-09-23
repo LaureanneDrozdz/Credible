@@ -9,11 +9,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-credible}
       POSTGRES_DB: ${POSTGRES_DB:-credible}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - '${DB_PORT:-5432}:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -28,7 +28,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-credible}:${POSTGRES_PASSWORD:-credible}@db:5432/${POSTGRES_DB:-credible}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     ports:
-      - "3001:3001"
+      - '3001:3001'
     depends_on:
       db:
         condition: service_healthy
@@ -48,7 +48,7 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:3001
       API_URL_INTERNAL: http://backend:3001
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
       - backend
     develop:
